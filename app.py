@@ -32,7 +32,7 @@ st.markdown("""
 
 .hero{
     text-align:center;
-    padding:30px;
+    margin-bottom:30px;
 }
 
 .hero-title{
@@ -55,23 +55,18 @@ div[data-testid="stButton"] > button{
     font-weight:600;
 }
 
-.question-box{
-    background:#111827;
-    padding:25px;
-    border-radius:15px;
-    border:1px solid #1F2937;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
-<div class="hero-title">
-SWKO Interview
-</div>
+<div class="hero">
+    <div class="hero-title">
+        SWKO Interview
+    </div>
 
-<div class="hero-subtitle">
-Practice smarter for your next interview.
+    <div class="hero-subtitle">
+        Practice smarter for your next interview.
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -79,8 +74,9 @@ col1, col2 = st.columns(2)
 
 with col1:
     role = st.text_input(
-        "",
-        placeholder="Enter a role (e.g. AI Engineer, Data Scientist, Frontend Developer)"
+        "Role",
+        placeholder="AI Engineer, Data Scientist, Frontend Developer",
+        label_visibility="collapsed"
     )
 
 with col2:
@@ -98,7 +94,7 @@ questions_count = st.number_input(
 )
 
 generate = st.button(
-    "Generate Questions",
+    "Generate Interview Questions",
     use_container_width=True
 )
 
@@ -124,23 +120,23 @@ Format neatly with numbering.
         with st.spinner("Generating Questions..."):
 
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash-lite",
                 contents=prompt
             )
 
         st.markdown("## Interview Questions")
 
-        st.markdown(
-            f"""
-            <div class="question-box">
-            {response.text}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        with st.container(border=True):
+            st.markdown(response.text)
 
     except Exception as e:
-        st.error(f"Error: {e}")
+
+        if "429" in str(e):
+            st.error(
+                "Daily API limit reached. Please try again later."
+            )
+        else:
+            st.error(f"Error: {e}")
 
 if st.button("Clear"):
     st.rerun()
