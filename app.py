@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=st.secrets["GEMINI_API_KEY"]
 )
 
 st.set_page_config(
@@ -89,9 +89,12 @@ with col2:
         ["Beginner", "Intermediate", "Advanced"]
     )
 
-questions_count = st.selectbox(
+questions_count = st.number_input(
     "Number of Questions",
-    [5, 10, 15, 20]
+    min_value=5,
+    max_value=25,
+    value=10,
+    step=1
 )
 
 generate = st.button(
