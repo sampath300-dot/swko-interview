@@ -3,17 +3,25 @@ from google import genai
 from dotenv import load_dotenv
 import os
 
+# Load environment variables
 load_dotenv()
 
-client = genai.Client(
-    api_key=st.secrets["GEMINI_API_KEY"]
-)
+# API Key (works locally and on Streamlit Cloud)
+api_key = os.getenv("GEMINI_API_KEY")
 
+if not api_key:
+    api_key = st.secrets["GEMINI_API_KEY"]
+
+client = genai.Client(api_key=api_key)
+
+# Page Config
 st.set_page_config(
     page_title="SWKO Interview",
-    layout="wide"
+    page_icon="🎯",
+    layout="centered"
 )
 
+# Custom CSS
 st.markdown("""
 <style>
 
@@ -26,25 +34,13 @@ st.markdown("""
     padding-top:2rem;
 }
 
-[data-testid="InputInstructions"]{
-    display:none;
-}
-
-.hero{
+h1{
     text-align:center;
-    margin-bottom:30px;
-}
-
-.hero-title{
-    font-size:58px;
-    font-weight:700;
     color:white;
 }
 
-.hero-subtitle{
-    font-size:18px;
-    color:#94A3B8;
-    margin-top:10px;
+[data-testid="stNumberInput"]{
+    color:white;
 }
 
 div[data-testid="stButton"] > button{
@@ -58,31 +54,27 @@ div[data-testid="stButton"] > button{
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("""
-<div class="hero">
-    <div class="hero-title">
-        SWKO Interview
-    </div>
+# Header
+st.title("SWKO Interview")
+st.caption("Practice smarter for your next interview.")
 
-    <div class="hero-subtitle">
-        Practice smarter for your next interview.
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
+# Inputs
 col1, col2 = st.columns(2)
 
 with col1:
     role = st.text_input(
         "Role",
-        placeholder="AI Engineer, Data Scientist, Frontend Developer",
-        label_visibility="collapsed"
+        placeholder="AI Engineer, Data Scientist, Frontend Developer"
     )
 
 with col2:
     level = st.selectbox(
         "Experience",
-        ["Beginner", "Intermediate", "Advanced"]
+        [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+        ]
     )
 
 questions_count = st.number_input(
@@ -98,6 +90,7 @@ generate = st.button(
     use_container_width=True
 )
 
+# Generate Questions
 if generate:
 
     if role.strip() == "":
@@ -108,9 +101,9 @@ if generate:
 Generate {questions_count} interview questions for a {level} level {role}.
 
 Include:
-- Technical Questions
-- Project Questions
-- Scenario Based Questions
+1. Technical Questions
+2. Project-Based Questions
+3. Scenario-Based Questions
 
 Format neatly with numbering.
 """
@@ -124,19 +117,17 @@ Format neatly with numbering.
                 contents=prompt
             )
 
-        st.markdown("## Interview Questions")
+        st.markdown("---")
+        st.subheader("Interview Questions")
 
-        with st.container(border=True):
-            st.markdown(response.text)
+        st.markdown(response.text)
 
     except Exception as e:
 
         if "429" in str(e):
             st.error(
-                "Daily API limit reached. Please try again later."
+                "API limit reached. Please try again later."
             )
+
         else:
             st.error(f"Error: {e}")
-
-if st.button("Clear"):
-    st.rerun()
