@@ -1,0 +1,143 @@
+import streamlit as st
+from google import genai
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+st.set_page_config(
+    page_title="SWKO Interview",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+
+[data-testid="stAppViewContainer"]{
+    background:#0B1120;
+}
+
+.block-container{
+    max-width:900px;
+    padding-top:2rem;
+}
+
+[data-testid="InputInstructions"]{
+    display:none;
+}
+
+.hero{
+    text-align:center;
+    padding:30px;
+}
+
+.hero-title{
+    font-size:58px;
+    font-weight:700;
+    color:white;
+}
+
+.hero-subtitle{
+    font-size:18px;
+    color:#94A3B8;
+    margin-top:10px;
+}
+
+div[data-testid="stButton"] > button{
+    width:100%;
+    height:55px;
+    border-radius:12px;
+    font-size:17px;
+    font-weight:600;
+}
+
+.question-box{
+    background:#111827;
+    padding:25px;
+    border-radius:15px;
+    border:1px solid #1F2937;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class="hero-title">
+SWKO Interview
+</div>
+
+<div class="hero-subtitle">
+Practice smarter for your next interview.
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    role = st.text_input(
+        "",
+        placeholder="Enter a role (e.g. AI Engineer, Data Scientist, Frontend Developer)"
+    )
+
+with col2:
+    level = st.selectbox(
+        "Experience",
+        ["Beginner", "Intermediate", "Advanced"]
+    )
+
+questions_count = st.selectbox(
+    "Number of Questions",
+    [5, 10, 15, 20]
+)
+
+generate = st.button(
+    "Generate Questions",
+    use_container_width=True
+)
+
+if generate:
+
+    if role.strip() == "":
+        st.warning("Please enter a role.")
+        st.stop()
+
+    prompt = f"""
+Generate {questions_count} interview questions for a {level} level {role}.
+
+Include:
+- Technical Questions
+- Project Questions
+- Scenario Based Questions
+
+Format neatly with numbering.
+"""
+
+    try:
+
+        with st.spinner("Generating Questions..."):
+
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+
+        st.markdown("## Interview Questions")
+
+        st.markdown(
+            f"""
+            <div class="question-box">
+            {response.text}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    except Exception as e:
+        st.error(f"Error: {e}")
+
+if st.button("Clear"):
+    st.rerun()
